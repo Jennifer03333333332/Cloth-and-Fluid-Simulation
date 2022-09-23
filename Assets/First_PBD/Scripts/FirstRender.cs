@@ -25,11 +25,11 @@ public class FirstRender : MonoBehaviour
         TestTexture.enableRandomWrite = true;
         TestTexture.Create();
         //Load shader file
-        cshader = Resources.Load("Test") as ComputeShader;//Test.compute must under the resources folder
+        cshader = Resources.Load("First_Compute") as ComputeShader;//Test.compute must under the resources folder
 
         //Connect to the compute shader
         //1 create a integer to store the identifier of our kernel
-        int computeKernel = cshader.FindKernel("Test");//which name?
+        int computeKernel = cshader.FindKernel("CSMain");
         cshader.SetTexture(computeKernel, "Result", TestTexture);
         //because Threads*Threadsgroup = texture's length/width
         cshader.Dispatch(computeKernel, TestTexture.width / THREADS, TestTexture.height / THREADS, 1);
@@ -38,6 +38,10 @@ public class FirstRender : MonoBehaviour
         //Assign the texture to material
         m_Renderer.material.SetTexture("_MainTex", TestTexture);
     }
+
+    //Compute shader needs dispose
+
+
 
 
 }

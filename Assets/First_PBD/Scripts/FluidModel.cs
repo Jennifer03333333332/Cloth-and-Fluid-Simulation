@@ -5,10 +5,8 @@ using UnityEngine.Rendering;
 
 namespace JenniferFluid
 {
-
-    public class FluidBody : IDisposable
+    public class FluidModel : IDisposable
     {
-
         public int NumParticles { get; private set; }
 
         public Bounds Bounds;
@@ -40,12 +38,13 @@ namespace JenniferFluid
 
         private ComputeBuffer m_argsBuffer;
 
-        public FluidBody(List<Vector4> Fluids_Positions, Bounds fluid_bounds, float radius, float density, Matrix4x4 RTS)
+        public FluidModel(List<Vector4> Fluids_Positions, Bounds fluid_bounds, float radius, float density, Matrix4x4 RTS)
         {
             NumParticles = Fluids_Positions.Count;
             Bounds = fluid_bounds;
             fluids_positions_array = Fluids_Positions.ToArray();
-
+            //Debug.Log(fluids_positions_array[0]);
+            //Debug.Log(fluids_positions_array[1]);
 
             Density = density;
             Viscosity = 0.002f;
@@ -61,13 +60,47 @@ namespace JenniferFluid
             CreateParticles(Fluids_Positions, RTS);
         }
 
+        private void CreateParticles(List<Vector4> Fluids_Positions, Matrix4x4 RTS)
+        {
+            Vector4[] positions = new Vector4[NumParticles];
+            Vector4[] predicted = new Vector4[NumParticles];
+            Vector4[] velocities = new Vector4[NumParticles];
+
+            //position and predicted == initial positions
+            fluids_positions_array.CopyTo(positions, 0);
+            fluids_positions_array.CopyTo(predicted, 0);
+            //Debug.Log(positions[0]);
+            //Debug.Log(positions[1]);
+            Positions = new ComputeBuffer(NumParticles, 4 * sizeof(float));
+            Positions.SetData(positions);
+
+            //Predicted and velocities use a double buffer as solver step
+            //needs to read from many locations of buffer and write the result
+            //in same pass. Could be removed if needed as long as buffer writes 
+            //are atomic. Not sure if they are.
+
+            //4 buffers * 20000+particles hmmm
+
+            Predicted = new ComputeBuffer[2];
+            Predicted[0] = new ComputeBuffer(NumParticles, 4 * sizeof(float));
+            Predicted[0].SetData(predicted);
+            Predicted[1] = new ComputeBuffer(NumParticles, 4 * sizeof(float));
+            Predicted[1].SetData(predicted);
+
+            Velocities = new ComputeBuffer[2];
+            Velocities[0] = new ComputeBuffer(NumParticles, 4 * sizeof(float));
+            Velocities[0].SetData(velocities);
+            Velocities[1] = new ComputeBuffer(NumParticles, 4 * sizeof(float));
+            Velocities[1].SetData(velocities);
+        }
         /// <summary>
         /// Draws the mesh spheres when draw particles is enabled.
         /// </summary>
-        public void Draw(Camera cam, Mesh mesh, Material material, int layer)
+        public void Draw(Camera cam, Mesh mesh, Material material, int layer)//call on Each frame ?what's layer
         {
+            //Debug.Log(mesh.GetIndexCount(0));
             if (m_argsBuffer == null)
-                CreateArgBuffer(mesh.GetIndexCount(0));
+                CreateArgBuffer(mesh.GetIndexCount(0));//2306
 
             material.SetBuffer("positions", Positions);
             material.SetColor("color", Color.white);
@@ -105,44 +138,12 @@ namespace JenniferFluid
             CBUtility.Release(ref m_argsBuffer);
         }
 
-        private void CreateParticles(List<Vector4> Fluids_Positions, Matrix4x4 RTS)
-        {
-            Vector4[] positions = new Vector4[NumParticles];
-            Vector4[] predicted = new Vector4[NumParticles];
-            Vector4[] velocities = new Vector4[NumParticles];
-
-            //position and predicted == initial positions
-            fluids_positions_array.CopyTo(positions, 0);
-            fluids_positions_array.CopyTo(predicted, 0);
-
-            Positions = new ComputeBuffer(NumParticles, 4 * sizeof(float));
-            Positions.SetData(positions);
-
-            //Predicted and velocities use a double buffer as solver step
-            //needs to read from many locations of buffer and write the result
-            //in same pass. Could be removed if needed as long as buffer writes 
-            //are atomic. Not sure if they are.
-
-            //4 buffers * 20000+particles hmmm
-
-            Predicted = new ComputeBuffer[2];
-            Predicted[0] = new ComputeBuffer(NumParticles, 4 * sizeof(float));
-            Predicted[0].SetData(predicted);
-            Predicted[1] = new ComputeBuffer(NumParticles, 4 * sizeof(float));
-            Predicted[1].SetData(predicted);
-
-            Velocities = new ComputeBuffer[2];
-            Velocities[0] = new ComputeBuffer(NumParticles, 4 * sizeof(float));
-            Velocities[0].SetData(velocities);
-            Velocities[1] = new ComputeBuffer(NumParticles, 4 * sizeof(float));
-            Velocities[1].SetData(velocities);
-        }
 
         private void CreateArgBuffer(uint indexCount)
         {
             uint[] args = new uint[5] { 0, 0, 0, 0, 0 };
-            args[0] = indexCount;
-            args[1] = (uint)NumParticles;
+            args[0] = indexCount;//2306
+            args[1] = (uint)NumParticles;//14448
 
             m_argsBuffer = new ComputeBuffer(1, args.Length * sizeof(uint), ComputeBufferType.IndirectArguments);
             m_argsBuffer.SetData(args);

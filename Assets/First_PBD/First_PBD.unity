@@ -347,21 +347,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   radius: 0
   density: 0
-  min_innerbounds: {x: 0, y: 0, z: 0}
-  max_innerbounds: {x: 0, y: 0, z: 0}
-  min_outerbounds: {x: 0, y: 0, z: 0}
-  max_outerbounds: {x: 0, y: 0, z: 0}
+  m_drawFluidParticles: 0
+  m_drawBoundaryParticles: 0
+  m_startRunning: 0
+  volume_mat: {fileID: 2100000, guid: 08efed2497ae8e44d9a57656d2d47aff, type: 2}
+  m_particleMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+  m_fluidParticleMat: {fileID: 2100000, guid: d15869a62b149464b8980f55b89177a8, type: 2}
+  m_boundaryParticleMat: {fileID: 2100000, guid: bcce7026e0f609b4fac9a92557c196e0, type: 2}
   min_boundarybounds: {x: 0, y: 0, z: 0}
   max_boundarybounds: {x: 0, y: 0, z: 0}
   Exclusion_list: []
   NumBoundaryParticles: 0
-  min_fluidbounds: {x: 0, y: 0, z: 0}
-  max_fluidbounds: {x: 0, y: 0, z: 0}
-  Fluid_Exclusion_list: []
   min_realfluidbounds: {x: 0, y: 0, z: 0}
   max_realfluidbounds: {x: 0, y: 0, z: 0}
-  fluid_spacing: 0
+  Fluid_Exclusion_list: []
   NumFluidParticles: 0
+  fluid_spacing: 0
 --- !u!1 &1749842960
 GameObject:
   m_ObjectHideFlags: 0
@@ -380,7 +381,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &1749842961
 BoxCollider:
   m_ObjectHideFlags: 0

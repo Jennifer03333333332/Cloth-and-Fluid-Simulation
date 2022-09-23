@@ -1,0 +1,40 @@
+// Each #kernel tells which function to compile; you can have many kernels
+//CSMain: kernal's name. Computer shader must contain at least one compute kernel
+#pragma kernel CSMain
+
+// Create a RenderTexture with enableRandomWrite flag and set it with cs.SetTexture
+
+//RW means read and write. A float4 is a four-component float vector
+//tex position(index) is uint2, it stores float4 data in this case
+RWTexture2D<float4> Result;//Texture size = threadgroups's x*y*z * threads x*y*z
+
+//keijiro
+// Hash function from H. Schechter & R. Bridson, goo.gl/RXiKaH
+uint Hash(uint s)
+{
+    s ^= 2747636419u;
+    s *= 2654435769u;
+    s ^= s >> 16;
+    s *= 2654435769u;
+    s ^= s >> 16;
+    s *= 2654435769u;
+    return s;
+}
+float Random(uint seed)
+{
+    return float(Hash(seed)) / 4294967295.0; // 2^32-1
+}
+
+
+//8*8*1 threads in one thread group
+[numthreads(8, 8, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)//threadid for all threads
+{
+    //Result[id.xy] = float4(id.x & id.y, (id.x & 15)/15.0, (id.y & 15)/15.0, 0.0); //insane image
+    //Result[id.xy] = float4(1, 0, 0, 1);  //whole read
+    float w, h;
+    Result.GetDimensions(w, h);
+    //uint2 is the input of RWTexture2D[], contains the (x, y) coordinates.
+    Result[id.xy] = Random(id.x + id.y * w); // noise. use current texture coord as seeds 
+    //Result[id.xy] = float4(Random(id.x + id.y * w), 0.0 , 0.0, 1.0); // red + noise
+}
