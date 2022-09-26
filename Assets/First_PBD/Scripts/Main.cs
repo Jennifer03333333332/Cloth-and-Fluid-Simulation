@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 namespace JenniferFluid
 {
@@ -11,9 +10,9 @@ namespace JenniferFluid
         //[Header("particle's radius")]
         [SerializeField]
         //particle's radius
-        public float radius;
+        public float radius = 0.1f;
         [SerializeField]
-        public float density;
+        public float density = 1000.0f;
 
         [Header("Settings")]
         [SerializeField]
@@ -46,8 +45,7 @@ namespace JenniferFluid
         private Bounds boundary_Bounds;
 
 
-        public ComputeBuffer Boundary_pos_cbuffer { get; private set; }
-        private ComputeBuffer boundary_argsBuffer;
+
         [Header("Fluid")]
         [SerializeField]
         public Vector3 min_realfluidbounds;
@@ -70,8 +68,8 @@ namespace JenniferFluid
         //List of particles' position
         private List<Vector4> Boundary_Positions;
         private List<Vector4> Fluids_Positions;
-        
 
+        private BoundaryModel m_boundary;
         private FluidModel m_fluid;
 
         private TimeStepFluidModel simulation;
@@ -158,6 +156,8 @@ namespace JenniferFluid
                 }
             }
             NumBoundaryParticles = Boundary_Positions.Count;
+
+
             Debug.Log("Boundary Particles = " + NumBoundaryParticles);
             min_boundarybounds -= new Vector3(radius, radius, radius);
             max_boundarybounds += new Vector3(radius, radius, radius);
@@ -165,24 +165,14 @@ namespace JenniferFluid
             boundary_Bounds.SetMinMax(min_boundarybounds, max_boundarybounds);
             Debug.Log("Actual Boundary bounds = " + boundary_Bounds.ToString());
             //Create Boundary Particles
-            //m_boundary = new FluidBoundary(source, radius, density, Matrix4x4.identity);
-            Vector4[] boundary_pos_array = Boundary_Positions.ToArray();
+            m_boundary = new BoundaryModel(Boundary_Positions, boundary_Bounds, radius, density);
 
-            Boundary_pos_cbuffer = new ComputeBuffer(Boundary_Positions.Count, 4 * sizeof(float));
-            Boundary_pos_cbuffer.SetData(boundary_pos_array);
         }
-        private void CreateBoundryPsi()//what's Psi?
-        {
-            float cellSize = radius * 4.0f;
-            SmoothingKernel K = new SmoothingKernel(cellSize);
-            //Debug.Log(cellSize);
 
-            //Stuck here, wait for further dev
-        }
         private void CreateFluid()
         {
-            Vector3 min_fluidbounds = new Vector3(-8 + radius, 0 + radius, -1 + radius);
-            Vector3 max_fluidbounds = new Vector3(-4 - radius, 8 - radius, 2 - radius);//(-4, 8, 2); just give the initial fluid's volume
+            Vector3 min_fluidbounds = new Vector3(-8.0f + radius, 0.0f + radius, -1.0f + radius);
+            Vector3 max_fluidbounds = new Vector3(-4.0f - radius, 8.0f - radius, 2.0f - radius);//(-4, 8, 2); just give the initial fluid's volume
 
             Bounds fluidbounds = new Bounds();
             fluidbounds.SetMinMax(min_fluidbounds, max_fluidbounds);
@@ -197,9 +187,9 @@ namespace JenniferFluid
             //diameter*0.9 被用做spacing
             fluid_spacing = radius * 2.0f  * 0.9f;
             float half_fluid_spacing = fluid_spacing * 0.5f;
-            Fluid_Exclusion_list = new List<Bounds>();
-
-            int numX = (int)((fluidbounds.size.x + half_fluid_spacing) / fluid_spacing);
+            Fluid_Exclusion_list = new List<Bounds>();//null
+            //how many particles in that directions
+            int numX = (int)((fluidbounds.size.x + half_fluid_spacing) / fluid_spacing); //real lines + 1
             int numY = (int)((fluidbounds.size.y + half_fluid_spacing) / fluid_spacing);
             int numZ = (int)((fluidbounds.size.z + half_fluid_spacing) / fluid_spacing);
 
@@ -215,24 +205,11 @@ namespace JenniferFluid
                     {
                         //each particle's position
                         Vector4 pos = new Vector4();
+                        //the center of each pa
                         pos.x = fluid_spacing * x + fluidbounds.min.x + half_fluid_spacing;
                         pos.y = fluid_spacing * y + fluidbounds.min.y + half_fluid_spacing;
                         pos.z = fluid_spacing * z + fluidbounds.min.z + half_fluid_spacing;
 
-                        bool exclude = false;
-                        for (int i = 0; i < Fluid_Exclusion_list.Count; i++)//目前only has one outerBound
-                        {
-                            //如果pos在内边界内,找下一个粒子
-                            if (Fluid_Exclusion_list[i].Contains(pos))
-                            {
-                                exclude = true;
-                                break;
-                            }
-                        }
-
-                        //如果pos不在内边界内, Boundary positions list 增加
-                        if (!exclude)
-                        {
                             Fluids_Positions.Add(pos);
                             //calculate the range of real bound particles
                             if (pos.x < min_realfluidbounds.x) min_realfluidbounds.x = pos.x;
@@ -243,7 +220,6 @@ namespace JenniferFluid
                             if (pos.y > max_realfluidbounds.y) max_realfluidbounds.y = pos.y;
                             if (pos.z > max_realfluidbounds.z) max_realfluidbounds.z = pos.z;
 
-                        }
 
                     }
                 }
@@ -259,8 +235,8 @@ namespace JenniferFluid
 
             NumFluidParticles = Fluids_Positions.Count;
             Debug.Log("Fluid Particles = " + NumFluidParticles);
-            //Debug.Log(Fluids_Positions[0]);
-            //Debug.Log(Fluids_Positions[1]);
+            Debug.Log(Fluids_Positions[0]);
+            Debug.Log(Fluids_Positions[NumFluidParticles - 1] + " last p ");
 
             m_fluid = new FluidModel(Fluids_Positions, fluids_Bounds, half_fluid_spacing, density, Matrix4x4.identity);
 
@@ -270,8 +246,7 @@ namespace JenniferFluid
         void Start()
         {
             //Init()
-            radius = 0.1f;
-            density = 1000.0f;
+
             Vector3 min_boun_innerbounds = new Vector3(-8, 0, -2);
             Vector3 max_boun_innerbounds = new Vector3(8, 10, 2);
 
@@ -279,7 +254,6 @@ namespace JenniferFluid
             {
                 //1 Boundary particles
                 CreateBoundary(min_boun_innerbounds, max_boun_innerbounds);
-                CreateBoundryPsi();
 
 
                 //2 Fluid particles
@@ -327,22 +301,8 @@ namespace JenniferFluid
             }
             if (m_drawBoundaryParticles)//must move to boundary
             {
-                uint[] args = new uint[5] { 0, 0, 0, 0, 0 };
-                args[0] = m_particleMesh.GetIndexCount(0);
-                args[1] = (uint)NumBoundaryParticles;
-
-                boundary_argsBuffer = new ComputeBuffer(1, args.Length * sizeof(uint), ComputeBufferType.IndirectArguments);
-                boundary_argsBuffer.SetData(args);
-                //connect to surface shader of this mat
-                m_boundaryParticleMat.SetBuffer("positions", Boundary_pos_cbuffer);
-                m_boundaryParticleMat.SetColor("color", Color.blue);
-                m_boundaryParticleMat.SetFloat("diameter", radius * 1.2f);
-
-                ShadowCastingMode castShadow = ShadowCastingMode.Off;
-                bool recieveShadow = false;
-
-                Graphics.DrawMeshInstancedIndirect(m_particleMesh, 0, m_boundaryParticleMat, boundary_Bounds, boundary_argsBuffer, 0, null, castShadow, recieveShadow, 0, Camera.main);
-
+                m_boundary.Draw(Camera.main, m_particleMesh, m_boundaryParticleMat, 0);
+                
             }
 
 
@@ -350,13 +310,7 @@ namespace JenniferFluid
 
         private void OnDestroy()
         {
-            //m_boundary.Dispose();
-            if (Boundary_pos_cbuffer != null)
-            {
-                Boundary_pos_cbuffer.Release();
-                Boundary_pos_cbuffer = null;
-            }
-            CBUtility.Release(ref boundary_argsBuffer);
+            m_boundary.Dispose();
 
             m_fluid.Dispose();
             simulation.Dispose();

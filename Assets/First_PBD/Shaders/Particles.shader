@@ -2,78 +2,81 @@ Shader "First_PBD/Particles"
 {
     Properties
     {
-   
         _MainTex ("Albedo (RGB)", 2D) = "white" {}
-        _Glossiness ("Smoothness", Range(0,1)) = 0.5
-        _Metallic ("Metallic", Range(0,1)) = 0.0
     }
     SubShader
     {
         Tags { "RenderType"="Opaque" }
-        LOD 200
+        LOD 100
 
-        CGPROGRAM
-        // Physically based Standard lighting model, and enable shadows on all light types
-        #pragma surface surf Standard fullforwardshadows
-        //?
-        #pragma multi_compile_instancing
-        #pragma instancing_options procedural:setup
-
-        // Use shader model 3.0 target, to get nicer looking lighting
-        //#pragma target 3.0
-
-        sampler2D _MainTex;
-        float4 color;
-        float diameter;
-
-        struct Input
+        Pass
         {
-            float2 uv_MainTex;
+            CGPROGRAM
+            #pragma vertex vert
+            #pragma fragment frag
+            #pragma multi_compile_fwdbase nolightmap nodirlightmap nodynlightmap novertexlight
+            #pragma target 4.5
+
+            #include "UnityCG.cginc"
+            #include "UnityLightingCommon.cginc"
+            #include "AutoLight.cginc"
+
+            sampler2D _MainTex;
             float4 color;
-        };
+            float diameter;
 
-#ifdef UNITY_PROCEDURAL_INSTANCING_ENABLED
-        StructuredBuffer<float3> positions;
+
+#if SHADER_TARGET >= 45
+            StructuredBuffer<float3> positions;
+#endif
+            struct v2f
+            {
+                float4 pos : SV_POSITION;
+                float2 uv_MainTex : TEXCOORD0;
+                float3 ambient : TEXCOORD1;
+                float3 diffuse : TEXCOORD2;
+                float3 color : TEXCOORD3;
+                SHADOW_COORDS(4)
+            };
+
+
+            v2f vert(appdata_full v, uint instanceID : SV_InstanceID)
+            {
+#if SHADER_TARGET >= 45
+                float3 data = positions[instanceID];
+#else
+                float3 data = 0;
 #endif
 
-        void setup()
-        {
-#ifdef UNITY_PROCEDURAL_INSTANCING_ENABLED
-            float3 pos = positions[unity_InstanceID];
-            float d = diameter;
+                float3 localPosition = v.vertex.xyz * diameter;
+                float3 worldPosition = data.xyz + localPosition;
+                float3 worldNormal = v.normal;
 
-            unity_ObjectToWorld._11_21_31_41 = float4(d, 0, 0, 0);
-            unity_ObjectToWorld._12_22_32_42 = float4(0, d, 0, 0);
-            unity_ObjectToWorld._13_23_33_43 = float4(0, 0, d, 0);
-            unity_ObjectToWorld._14_24_34_44 = float4(pos, 1);
+                float3 ndotl = saturate(dot(worldNormal, _WorldSpaceLightPos0.xyz));
+                float3 ambient = ShadeSH9(float4(worldNormal, 1.0f));
+                float3 diffuse = (ndotl * _LightColor0.rgb);
+                float3 color = v.color;// *(data.x + 4.21f) / 4.0f;//0 black 1 white
 
-            unity_WorldToObject = unity_ObjectToWorld;
-            unity_WorldToObject._14_24_34 *= -1;
-            unity_WorldToObject._11_22_33 = 1.0f / unity_WorldToObject._11_22_33;
-#endif
+                v2f o;
+                o.pos = mul(UNITY_MATRIX_VP, float4(worldPosition, 1.0f));
+                o.uv_MainTex = v.texcoord;
+                o.ambient = ambient;
+                o.diffuse = diffuse;
+                o.color = color;
+                TRANSFER_SHADOW(o)
+                    return o;
+            }
+
+            fixed4 frag(v2f i) : SV_Target
+            {
+                fixed shadow = SHADOW_ATTENUATION(i);
+                fixed4 albedo = tex2D(_MainTex, i.uv_MainTex);
+                float3 lighting = i.diffuse * shadow + i.ambient;
+                fixed4 output = fixed4(albedo.rgb * i.color * lighting, albedo.w);
+                UNITY_APPLY_FOG(i.fogCoord, output);
+                return output;
+            }
+            ENDCG
         }
-
-        half _Glossiness;
-        half _Metallic;
-
-        // Add instancing support for this shader. You need to check 'Enable Instancing' on materials that use the shader.
-        // See https://docs.unity3d.com/Manual/GPUInstancing.html for more information about instancing.
-        // #pragma instancing_options assumeuniformscaling
-        UNITY_INSTANCING_BUFFER_START(Props)
-            // put more per-instance properties here
-        UNITY_INSTANCING_BUFFER_END(Props)
-
-        void surf (Input IN, inout SurfaceOutputStandard o)
-        {
-            // Albedo comes from a texture tinted by color
-            //fixed4 c = tex2D (_MainTex, IN.uv_MainTex) * color;
-            o.Albedo = color.rgb; //c.rgb
-            // Metallic and smoothness come from slider variables
-            o.Metallic = _Metallic;
-            o.Smoothness = _Glossiness;
-            o.Alpha = 1;//c.a;
-        }
-        ENDCG
     }
-    FallBack "Diffuse"
 }

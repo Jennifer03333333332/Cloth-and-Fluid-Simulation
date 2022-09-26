@@ -37,7 +37,7 @@ namespace JenniferFluid
         public ComputeBuffer[] Velocities { get; private set; }
 
         private ComputeBuffer m_argsBuffer;
-
+        
         public FluidModel(List<Vector4> Fluids_Positions, Bounds fluid_bounds, float radius, float density, Matrix4x4 RTS)
         {
             NumParticles = Fluids_Positions.Count;
@@ -106,8 +106,8 @@ namespace JenniferFluid
             material.SetColor("color", Color.white);
             material.SetFloat("diameter", ParticleDiameter);
 
-            ShadowCastingMode castShadow = ShadowCastingMode.On;
-            bool recieveShadow = true;
+            ShadowCastingMode castShadow = ShadowCastingMode.Off;
+            bool recieveShadow = false;
 
             Graphics.DrawMeshInstancedIndirect(mesh, 0, material, Bounds, m_argsBuffer, 0, null, castShadow, recieveShadow, layer, cam);
         }
