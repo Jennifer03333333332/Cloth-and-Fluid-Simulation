@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+//vertex 0 and vertex 20 are fixed
 public class implicit_model : MonoBehaviour
 {
 	float 		t 		= 0.0333f;
@@ -9,18 +9,18 @@ public class implicit_model : MonoBehaviour
 	float		damping	= 0.99f;
 	float 		rho		= 0.995f;
 	float 		spring_k = 8000;
-	int[] 		E;
-	float[] 	L;
-	Vector3[] 	V;
+	int[] 		E;//unique Edge / vertex pairs
+    float[] 	L;//initial edge lengths
+    Vector3[] 	V;
 
     // Start is called before the first frame update
     void Start()
     {
 		Mesh mesh = GetComponent<MeshFilter> ().mesh;
 
-		//Resize the mesh.
-		int n=21;
-		Vector3[] X  	= new Vector3[n*n];
+        //Resize the mesh to 21 * 21 = 441 vertices
+        int n =21;
+		Vector3[] X  	= new Vector3[n*n];//vertex
 		Vector2[] UV 	= new Vector2[n*n];
 		int[] triangles	= new int[(n-1)*(n-1)*6];
 		for(int j=0; j<n; j++)
@@ -32,7 +32,7 @@ public class implicit_model : MonoBehaviour
 		int t=0;
 		for(int j=0; j<n-1; j++)
 		for(int i=0; i<n-1; i++)	
-		{
+		{//for each vertex, store the index of X[] to the triangles[]?
 			triangles[t*6+0]=j*n+i;
 			triangles[t*6+1]=j*n+i+1;
 			triangles[t*6+2]=(j+1)*n+i+1;
@@ -47,9 +47,9 @@ public class implicit_model : MonoBehaviour
 		mesh.RecalculateNormals ();
 
 
-		//Construct the original E
-		int[] _E = new int[triangles.Length*2];
-		for (int i=0; i<triangles.Length; i+=3) 
+        //Construct the original E. E is edge / vertex index pair
+        int[] _E = new int[triangles.Length*2];
+		for (int i=0; i<triangles.Length; i+=3) //For each triangle, record 6
 		{
 			_E[i*2+0]=triangles[i+0];
 			_E[i*2+1]=triangles[i+1];
