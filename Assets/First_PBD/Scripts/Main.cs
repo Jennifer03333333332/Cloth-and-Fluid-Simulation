@@ -236,7 +236,7 @@ namespace JenniferFluid
             NumFluidParticles = Fluids_Positions.Count;
             Debug.Log("Fluid Particles = " + NumFluidParticles);
             Debug.Log(Fluids_Positions[0]);
-            Debug.Log(Fluids_Positions[NumFluidParticles - 1] + " last p ");
+            Debug.Log(Fluids_Positions[NumFluidParticles - 1] + " last particle ");
 
             m_fluid = new FluidModel(Fluids_Positions, fluids_Bounds, half_fluid_spacing, density, Matrix4x4.identity);
 
@@ -267,7 +267,7 @@ namespace JenniferFluid
 
                 //m_solver = new FluidSolver(m_fluid, m_boundary);
 
-                simulation = new TimeStepFluidModel(m_fluid, NumBoundaryParticles);
+                simulation = new TimeStepFluidModel(m_fluid, m_boundary);//NumBoundaryParticles, 
 
                 //Water part.  Get a texture named Volume
                 //m_volume = new RenderVolume(boundary_Bounds, radius);
@@ -290,7 +290,7 @@ namespace JenniferFluid
             if (wasError) return;
             if (m_startRunning)
             {
-                //simulation.StepPhysics(timeStep);
+                simulation.StepPhysics(timeStep);
                 //m_volume.FillVolume(m_fluid, m_solver.Hash, m_solver.Kernel);
             }
 

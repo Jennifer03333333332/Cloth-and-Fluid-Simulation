@@ -204,7 +204,7 @@ public class PBD_model : MonoBehaviour
 
         for (int i = 0; i < X.Length; i++)
         {
-            if (i == 0 || i == cloth_sidelength - 1) continue;
+            if (i == 0 || i == cloth_sidelength - 1) continue;//skip 2 fixed points
             //Initial Setup
             //1 Damp the velocity
             V[i] *= damping;

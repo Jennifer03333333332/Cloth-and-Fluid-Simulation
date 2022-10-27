@@ -62,7 +62,6 @@ namespace JenniferFluid {
         }
 
 
-        
 
         /// <summary>
         /// A inverted cube (material culls front) needs

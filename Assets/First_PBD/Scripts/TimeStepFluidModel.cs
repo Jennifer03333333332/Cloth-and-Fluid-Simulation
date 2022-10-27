@@ -16,12 +16,15 @@ namespace JenniferFluid
         public int SolverIterations { get; set; }
 
         public int ConstraintIterations { get; set; }
+        public Grid m_grid { get; private set; }
 
         private FluidModel m_fluid;
+        private BoundaryModel m_boundary;
+
         private ComputeShader m_shader;
         public SmoothingKernel Kernel { get; private set; }
 
-        public TimeStepFluidModel(FluidModel model, int NumBoundParticles)
+        public TimeStepFluidModel(FluidModel model, BoundaryModel boundary)
         {
 
 
@@ -29,11 +32,11 @@ namespace JenniferFluid
             ConstraintIterations = 2;
 
             m_fluid = model;
-            //Boundary = boundary;
+            m_boundary = boundary;
 
             float cellSize = model.ParticleRadius * 4.0f;
-            int total = model.NumParticles + NumBoundParticles;//14448 + 13808
-            //Hash = new GridHash(Boundary.Bounds, total, cellSize);
+            int total = model.NumParticles + boundary.NumParticles;//14448 + 13808
+            m_grid = new Grid(boundary.Bounds, total, cellSize);
             Kernel = new SmoothingKernel(cellSize);
 
             int numParticles = model.NumParticles;//14448
@@ -96,9 +99,13 @@ namespace JenniferFluid
             }
 
         }
+
+        //calculate the predicted v and pos (PredictedWRITE and VelocitiesWRITE)
+        //v' = v + (Gravity - Dampning)*dt
+        //pos = pos + v'*dt
         private void PredictPositions(float dt)
         {
-            //Find the PredictPositions kernel
+            //Find the kernel  (PredictPositions) in Simulation.compute
             int kernel = m_shader.FindKernel("PredictPositions");
 
             m_shader.SetBuffer(kernel, "Positions", m_fluid.Positions);
@@ -107,11 +114,18 @@ namespace JenniferFluid
             m_shader.SetBuffer(kernel, "VelocitiesWRITE", m_fluid.Velocities[WRITE]);
 
             m_shader.Dispatch(kernel, ThreadsGroups, 1, 1);
-            //double buffer...
+            //void PredictPositions(int id : SV_DispatchThreadID)
+
+            //dt is each iteration time; Damping now = 0
+
+
+            //Predicted and Velocities has double buffer, init() is the same
             Swap(m_fluid.Predicted);
             Swap(m_fluid.Velocities);
             
         }
+        
+        
         private void Swap(ComputeBuffer[] buffers)
         {
             ComputeBuffer tmp = buffers[0];
@@ -120,34 +134,34 @@ namespace JenniferFluid
         }
 
 
-        //public void ConstrainPositions()
-        //{
+        public void ConstrainPositions()
+        {
 
-        //    int computeKernel = m_shader.FindKernel("ComputeDensity");
-        //    int solveKernel = m_shader.FindKernel("SolveConstraint");
+            int computeKernel = m_shader.FindKernel("ComputeDensity");
+            int solveKernel = m_shader.FindKernel("SolveConstraint");
 
-        //    m_shader.SetBuffer(computeKernel, "Densities", m_fluid.Densities);
-        //    m_shader.SetBuffer(computeKernel, "Pressures", m_fluid.Pressures);
-        //    m_shader.SetBuffer(computeKernel, "Boundary", Boundary.Positions);
-        //    m_shader.SetBuffer(computeKernel, "IndexMap", Hash.IndexMap);
-        //    m_shader.SetBuffer(computeKernel, "Table", Hash.Table);
+            m_shader.SetBuffer(computeKernel, "Densities", m_fluid.Densities);
+            m_shader.SetBuffer(computeKernel, "Pressures", m_fluid.Pressures);
+            m_shader.SetBuffer(computeKernel, "Boundary", m_boundary.Boundary_pos_cbuffer);
+            m_shader.SetBuffer(computeKernel, "IndexMap", m_grid.IndexMap);
+            m_shader.SetBuffer(computeKernel, "Table", m_grid.Table);
 
-        //    m_shader.SetBuffer(solveKernel, "Pressures", m_fluid.Pressures);
-        //    m_shader.SetBuffer(solveKernel, "Boundary", Boundary.Positions);
-        //    m_shader.SetBuffer(solveKernel, "IndexMap", Hash.IndexMap);
-        //    m_shader.SetBuffer(solveKernel, "Table", Hash.Table);
+            m_shader.SetBuffer(solveKernel, "Pressures", m_fluid.Pressures);
+            m_shader.SetBuffer(solveKernel, "Boundary", m_boundary.Boundary_pos_cbuffer);
+            m_shader.SetBuffer(solveKernel, "IndexMap", m_grid.IndexMap);
+            m_shader.SetBuffer(solveKernel, "Table", m_grid.Table);
 
-        //    for (int i = 0; i < ConstraintIterations; i++)
-        //    {
-        //        m_shader.SetBuffer(computeKernel, "PredictedREAD", m_fluid.Predicted[READ]);
-        //        m_shader.Dispatch(computeKernel, ThreadsGroups, 1, 1);
+            for (int i = 0; i < ConstraintIterations; i++)
+            {
+                m_shader.SetBuffer(computeKernel, "PredictedREAD", m_fluid.Predicted[READ]);
+                m_shader.Dispatch(computeKernel, ThreadsGroups, 1, 1);
 
-        //        m_shader.SetBuffer(solveKernel, "PredictedREAD", m_fluid.Predicted[READ]);
-        //        m_shader.SetBuffer(solveKernel, "PredictedWRITE", m_fluid.Predicted[WRITE]);
-        //        m_shader.Dispatch(solveKernel, ThreadsGroups, 1, 1);
+                m_shader.SetBuffer(solveKernel, "PredictedREAD", m_fluid.Predicted[READ]);
+                m_shader.SetBuffer(solveKernel, "PredictedWRITE", m_fluid.Predicted[WRITE]);
+                m_shader.Dispatch(solveKernel, ThreadsGroups, 1, 1);
 
-        //        Swap(m_fluid.Predicted);
-        //    }
-        //}
+                Swap(m_fluid.Predicted);
+            }
+        }
     }
 }
