@@ -72,7 +72,7 @@ namespace JenniferFluid
 
             //m_sort = new BitonicSort(TotalParticles);
 
-            m_shader = Resources.Load("GridHash") as ComputeShader;
+            m_shader = Resources.Load("Grid") as ComputeShader;
             m_hashKernel = m_shader.FindKernel("HashParticles");
             m_clearKernel = m_shader.FindKernel("ClearTable");
             m_mapKernel = m_shader.FindKernel("MapTable");
@@ -130,6 +130,8 @@ namespace JenniferFluid
             MapTable();
         }
 
+        //(m_fluid.Predicted[READ], m_boundary.Boundary_pos_cbuffer)
+        //HashParticles()
         public void Process(ComputeBuffer particles, ComputeBuffer boundary)
         {
             int numParticles = particles.count;

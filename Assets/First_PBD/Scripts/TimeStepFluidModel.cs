@@ -84,10 +84,10 @@ namespace JenniferFluid
             //are atomic. Not sure if they are.
 
             for (int i = 0; i < SolverIterations; i++)
-            {
+            {   //calculate the predicted v and pos, store in m_fluid.Predicted[WRITE] and m_fluid.Velocities[WRITE], then swap
                 PredictPositions(dt);
-
-                //Hash.Process(m_fluid.Predicted[READ], Boundary.Positions);
+                //[Read] before is [Write]
+                m_grid.Process(m_fluid.Predicted[READ], m_boundary.Boundary_pos_cbuffer);
 
                 //ConstrainPositions();
 
@@ -133,7 +133,10 @@ namespace JenniferFluid
             buffers[1] = tmp;
         }
 
-
+        //in simulation.compute
+        //ComputeDensity():using predicted pos, calculate Densities and Pressures
+        //
+        //SolveConstraint()
         public void ConstrainPositions()
         {
 
@@ -150,7 +153,7 @@ namespace JenniferFluid
             m_shader.SetBuffer(solveKernel, "Boundary", m_boundary.Boundary_pos_cbuffer);
             m_shader.SetBuffer(solveKernel, "IndexMap", m_grid.IndexMap);
             m_shader.SetBuffer(solveKernel, "Table", m_grid.Table);
-
+            //for each iterations
             for (int i = 0; i < ConstraintIterations; i++)
             {
                 m_shader.SetBuffer(computeKernel, "PredictedREAD", m_fluid.Predicted[READ]);
