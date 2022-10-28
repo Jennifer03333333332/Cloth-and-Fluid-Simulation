@@ -22,7 +22,7 @@ namespace JenniferFluid
         public float InvCellSize { get; private set; }
 
         public int Groups { get; private set; }
-
+        
         /// <summary>
         /// Contains the particles hash value (x) and
         /// the particles index in its position array (y)
@@ -36,7 +36,7 @@ namespace JenniferFluid
         /// </summary>
         public ComputeBuffer Table { get; private set; }
 
-        //private BitonicSort m_sort;
+        private BitonicSort m_sort;
 
         private ComputeShader m_shader;
 
@@ -70,7 +70,7 @@ namespace JenniferFluid
             IndexMap = new ComputeBuffer(TotalParticles, 2 * sizeof(int));
             Table = new ComputeBuffer(size, 2 * sizeof(int));
 
-            //m_sort = new BitonicSort(TotalParticles);
+            m_sort = new BitonicSort(TotalParticles);
 
             m_shader = Resources.Load("Grid") as ComputeShader;
             m_hashKernel = m_shader.FindKernel("HashParticles");
@@ -94,7 +94,7 @@ namespace JenniferFluid
 
         public void Dispose()
         {
-            //m_sort.Dispose();
+            m_sort.Dispose();
 
             if (IndexMap != null)
             {
@@ -160,7 +160,7 @@ namespace JenniferFluid
         {
             //First sort by the hash values in x.
             //Uses bitonic sort but any other method will work.
-            //m_sort.Sort(IndexMap);
+            m_sort.Sort(IndexMap);
 
             m_shader.SetInt("TotalParticles", TotalParticles);
             m_shader.SetBuffer(m_clearKernel, "Table", Table);

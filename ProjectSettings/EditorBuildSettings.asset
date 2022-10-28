@@ -4,5 +4,8 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/First_PBD/First_PBD.unity
+    guid: 146af23a027ec5146b309510b70cee91
   m_configObjects: {}

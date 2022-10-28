@@ -1,15 +1,18 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+//test
+using UnityEngine.Rendering;
 namespace JenniferFluid
 {
-    public class TimeStepFluidModel//: IDisposable ??
+    public class TimeStepFluidModel: IDisposable
     {
         private const int THREADS = 128;
         private const int READ = 0;
         private const int WRITE = 1;
-
+        //test
+        bool capturing = true;
         //ThreadsGroups
         public int ThreadsGroups { get; private set; }
 
@@ -23,7 +26,7 @@ namespace JenniferFluid
 
         private ComputeShader m_shader;
         public SmoothingKernel Kernel { get; private set; }
-
+        public Vector4[] debugarray;
         public TimeStepFluidModel(FluidModel model, BoundaryModel boundary)
         {
             SolverIterations = 2;
@@ -46,7 +49,7 @@ namespace JenniferFluid
 
         public void Dispose()
         {
-            //Hash.Dispose();
+            m_grid.Dispose();
         }
         public void StepPhysics(float dt)
         {
@@ -72,9 +75,9 @@ namespace JenniferFluid
             m_shader.SetFloat("SpikyGrad", Kernel.SPIKY_GRAD);
             m_shader.SetFloat("ViscLap", Kernel.VISC_LAP);
 
-            //m_shader.SetFloat("HashScale", Hash.InvCellSize);
-            //m_shader.SetVector("HashSize", Hash.Bounds.size);
-            //m_shader.SetVector("HashTranslate", Hash.Bounds.min);
+            m_shader.SetFloat("HashScale", m_grid.InvCellSize);
+            m_shader.SetVector("HashSize", m_grid.Bounds.size);
+            m_shader.SetVector("HashTranslate", m_grid.Bounds.min);
 
             //Predicted and velocities use a double buffer as solver step
             //needs to read from many locations of buffer and write the result
@@ -137,7 +140,11 @@ namespace JenniferFluid
         //SolveConstraint(): pos += SolveDensity(particlesid, pos, pressure)
         public void ConstrainPositions()
         {
+            if (PIX.IsAttached() && capturing)
+            {
+                PIX.BeginGPUCapture();
 
+            }
             int computeKernel = m_shader.FindKernel("ComputeDensity");
             int solveKernel = m_shader.FindKernel("SolveConstraint");
 
@@ -163,6 +170,15 @@ namespace JenniferFluid
 
                 Swap(m_fluid.Predicted);
             }
+
+            if (capturing)
+            {
+                capturing = false;
+                PIX.EndGPUCapture();
+            }
+
+            //m_fluid.Predicted[READ].GetData(debugarray);
+            //Debug.Log(debugarray[0]);
         }
 
         //v = (pos' - original pos)/dt
