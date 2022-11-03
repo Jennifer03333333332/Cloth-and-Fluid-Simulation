@@ -447,7 +447,7 @@ MonoBehaviour:
   density: 1000
   m_drawFluidParticles: 1
   m_drawBoundaryParticles: 0
-  m_startRunning: 1
+  m_startRunning: 0
   volume_mat: {fileID: 2100000, guid: 08efed2497ae8e44d9a57656d2d47aff, type: 2}
   m_particleMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
   m_fluidParticleMat: {fileID: 2100000, guid: d15869a62b149464b8980f55b89177a8, type: 2}

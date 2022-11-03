@@ -67,7 +67,7 @@ namespace JenniferFluid
             m_shader.SetFloat("Density", m_fluid.Density);
             m_shader.SetFloat("Viscosity", m_fluid.Viscosity);
             m_shader.SetFloat("ParticleMass", m_fluid.ParticleMass);
-            //About Kernel
+            //About Grid Kernel
             m_shader.SetFloat("KernelRadius", Kernel.Radius);
             m_shader.SetFloat("KernelRadius2", Kernel.Radius2);
             m_shader.SetFloat("Poly6Zero", Kernel.Poly6(Vector3.zero));

@@ -109,6 +109,7 @@ namespace JenniferFluid
             }
         }
 
+        //In BoundaryModel::CreateBoundryPsi()
         public void Process(ComputeBuffer particles)
         {
             if (particles.count != TotalParticles)
@@ -130,8 +131,9 @@ namespace JenniferFluid
             MapTable();
         }
 
+        // In StepPhysics():
         //(m_fluid.Predicted[READ], m_boundary.Boundary_pos_cbuffer)
-        //HashParticles()
+        //compute file: HashParticles()
         public void Process(ComputeBuffer particles, ComputeBuffer boundary)
         {
             int numParticles = particles.count;

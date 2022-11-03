@@ -236,7 +236,7 @@ namespace JenniferFluid
             NumFluidParticles = Fluids_Positions.Count;
             Debug.Log("Fluid Particles = " + NumFluidParticles);
             Debug.Log(Fluids_Positions[0]);
-            Debug.Log(Fluids_Positions[NumFluidParticles - 1] + " last particle ");
+            Debug.Log(Fluids_Positions[NumFluidParticles - 1] + " last particle's pos ");
 
             m_fluid = new FluidModel(Fluids_Positions, fluids_Bounds, half_fluid_spacing, density, Matrix4x4.identity);
 

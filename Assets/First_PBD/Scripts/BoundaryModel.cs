@@ -51,7 +51,7 @@ namespace JenniferFluid
             //psi = Density * volume which is mass??
             ComputeShader shader = Resources.Load("BoundaryModel") as ComputeShader;
             //Target: Boundary_pos_cbuffer[id].w = psi;
-            //psi = Density * volume which is mass??
+            //psi = Density * volume , so psi == mass??
             int kernel = shader.FindKernel("ComputePsi");
 
             shader.SetFloat("Density", Density);
