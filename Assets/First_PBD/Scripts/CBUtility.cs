@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace JenniferFluid
 {
-
+    //compute buffer utility
     public static class CBUtility
     {
 

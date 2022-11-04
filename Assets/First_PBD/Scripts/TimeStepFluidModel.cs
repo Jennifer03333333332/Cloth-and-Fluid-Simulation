@@ -140,11 +140,11 @@ namespace JenniferFluid
         //SolveConstraint(): pos += SolveDensity(particlesid, pos, pressure)
         public void ConstrainPositions()
         {
-            if (PIX.IsAttached() && capturing)
-            {
-                PIX.BeginGPUCapture();
+            //if (PIX.IsAttached() && capturing)
+            //{
+            //    PIX.BeginGPUCapture();
 
-            }
+            //}
             int computeKernel = m_shader.FindKernel("ComputeDensity");
             int solveKernel = m_shader.FindKernel("SolveConstraint");
 
@@ -171,11 +171,11 @@ namespace JenniferFluid
                 Swap(m_fluid.Predicted);
             }
 
-            if (capturing)
-            {
-                capturing = false;
-                PIX.EndGPUCapture();
-            }
+            //if (capturing)
+            //{
+            //    capturing = false;
+            //    PIX.EndGPUCapture();
+            //}
 
             //m_fluid.Predicted[READ].GetData(debugarray);
             //Debug.Log(debugarray[0]);

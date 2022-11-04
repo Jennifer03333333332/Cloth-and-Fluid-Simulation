@@ -444,8 +444,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   radius: 0.1
+  fluid_space_coeff: 0.9
   density: 1000
-  m_drawFluidParticles: 1
+  m_drawFluidParticles: 0
   m_drawBoundaryParticles: 0
   m_startRunning: 0
   volume_mat: {fileID: 2100000, guid: 08efed2497ae8e44d9a57656d2d47aff, type: 2}

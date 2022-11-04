@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Unity.Collections;//for leakDetection
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -20,7 +21,7 @@ namespace JenniferFluid
 
         public float ParticleRadius { get; private set; }
 
-        public float ParticleDiameter { get { return ParticleRadius * 2.0f; } }
+        public float ParticleDiameter { get; private set; }
 
         public float ParticleMass { get; set; }
 
@@ -40,11 +41,13 @@ namespace JenniferFluid
         
         public FluidModel(List<Vector4> Fluids_Positions, Bounds fluid_bounds, float radius, float density, Matrix4x4 RTS)
         {
+            Unity.Collections.LowLevel.Unsafe.UnsafeUtility.SetLeakDetectionMode(NativeLeakDetectionMode.EnabledWithStackTrace);
             NumParticles = Fluids_Positions.Count;
             Bounds = fluid_bounds;
             fluids_positions_array = Fluids_Positions.ToArray();
             //Debug.Log(fluids_positions_array[0]);
             //Debug.Log(fluids_positions_array[1]);
+            
 
             Density = density;
             Viscosity = 0.002f;
@@ -53,7 +56,7 @@ namespace JenniferFluid
             ParticleRadius = radius;
             ParticleVolume = (4.0f / 3.0f) * Mathf.PI * Mathf.Pow(radius, 3);
             ParticleMass = ParticleVolume * Density;
-
+            ParticleDiameter =  ParticleRadius * 2.0f; 
             Densities = new ComputeBuffer(NumParticles, sizeof(float));
             Pressures = new ComputeBuffer(NumParticles, sizeof(float));
 
@@ -74,6 +77,7 @@ namespace JenniferFluid
             Positions = new ComputeBuffer(NumParticles, 4 * sizeof(float));
             Positions.SetData(positions);
 
+            Debug.Log(Positions.count + " fluid position count ");
             //Predicted and velocities use a double buffer as solver step
             //needs to read from many locations of buffer and write the result
             //in same pass. Could be removed if needed as long as buffer writes 
@@ -92,6 +96,9 @@ namespace JenniferFluid
             Velocities[0].SetData(velocities);
             Velocities[1] = new ComputeBuffer(NumParticles, 4 * sizeof(float));
             Velocities[1].SetData(velocities);
+
+            Debug.Log(Predicted[0].count + " Predicted[0] position count ");
+            Debug.Log(Velocities[0].count + " Velocities[0] position count ");
         }
         /// <summary>
         /// Draws the mesh spheres when draw particles is enabled.

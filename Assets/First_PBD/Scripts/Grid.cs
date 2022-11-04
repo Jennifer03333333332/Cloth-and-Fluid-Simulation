@@ -1,14 +1,14 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Collections;//for leakDetection
 using UnityEngine;
 
 namespace JenniferFluid
 {
     public class Grid : IDisposable
     {
-
-
+        
         private const int THREADS = 128;
         private const int READ = 0;
         private const int WRITE = 1;
@@ -42,8 +42,10 @@ namespace JenniferFluid
 
         private int m_hashKernel, m_clearKernel, m_mapKernel;
 
+        //boundary's particles
         public Grid(Bounds bounds, int numParticles, float cellSize)
         {
+            Unity.Collections.LowLevel.Unsafe.UnsafeUtility.SetLeakDetectionMode(NativeLeakDetectionMode.EnabledWithStackTrace);
             TotalParticles = numParticles;
             CellSize = cellSize;
             InvCellSize = 1.0f / CellSize;
@@ -109,7 +111,8 @@ namespace JenniferFluid
             }
         }
 
-        //In BoundaryModel::CreateBoundryPsi()
+        //In BoundaryModel::CreateBoundryPsi() 传入的是边界
+        //Execute: HashParticles() in compute shader
         public void Process(ComputeBuffer particles)
         {
             if (particles.count != TotalParticles)
@@ -142,8 +145,8 @@ namespace JenniferFluid
             if (numParticles + numBoundary != TotalParticles)
                 throw new ArgumentException("numParticles + numBoundary != TotalParticles");
 
-            m_shader.SetInt("NumParticles", numParticles);
-            m_shader.SetInt("TotalParticles", TotalParticles);
+            m_shader.SetInt("NumParticles", numParticles);//fluid
+            m_shader.SetInt("TotalParticles", TotalParticles);//fluid + boundary
             m_shader.SetFloat("HashScale", InvCellSize);
             m_shader.SetVector("HashSize", Bounds.size);
             m_shader.SetVector("HashTranslate", Bounds.min);

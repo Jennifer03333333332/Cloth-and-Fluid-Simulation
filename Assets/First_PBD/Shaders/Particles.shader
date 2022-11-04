@@ -28,7 +28,7 @@ Shader "First_PBD/Particles"
 
 
 #if SHADER_TARGET >= 45
-            StructuredBuffer<float3> positions;
+            StructuredBuffer<float4> positions;
 #endif
             struct v2f
             {
@@ -44,7 +44,7 @@ Shader "First_PBD/Particles"
             v2f vert(appdata_full v, uint instanceID : SV_InstanceID)
             {
 #if SHADER_TARGET >= 45
-                float3 data = positions[instanceID];
+                float4 data = positions[instanceID];
 #else
                 float3 data = 0;
 #endif

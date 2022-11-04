@@ -33,7 +33,7 @@ Shader "First_PBD/Particles_surface"
             };
 
     #ifdef UNITY_PROCEDURAL_INSTANCING_ENABLED
-            StructuredBuffer<float3> positions;
+            StructuredBuffer<float4> positions;
     #endif
 
             void setup()
@@ -45,7 +45,7 @@ Shader "First_PBD/Particles_surface"
                 unity_ObjectToWorld._11_21_31_41 = float4(d, 0, 0, 0);
                 unity_ObjectToWorld._12_22_32_42 = float4(0, d, 0, 0);
                 unity_ObjectToWorld._13_23_33_43 = float4(0, 0, d, 0);
-                unity_ObjectToWorld._14_24_34_44 = float4(pos, 1);
+                unity_ObjectToWorld._14_24_34_44 = float4(pos.x, pos.y, pos.z, 1);
 
                 unity_WorldToObject = unity_ObjectToWorld;
                 unity_WorldToObject._14_24_34 *= -1;

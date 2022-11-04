@@ -11,6 +11,7 @@ namespace JenniferFluid
         [SerializeField]
         //particle's radius
         public float radius = 0.1f;
+        public float fluid_space_coeff = 0.9f;//0.9f;
         [SerializeField]
         public float density = 1000.0f;
 
@@ -128,7 +129,7 @@ namespace JenniferFluid
                         pos.z = diameter * z + outerBounds.min.z + radius;
 
                         bool exclude = false;
-                        for (int i = 0; i < Exclusion_list.Count; i++)//目前only has one outerBound
+                        for (int i = 0; i < Exclusion_list.Count; i++)//目前only has one innerBound
                         {
                             //如果pos在内边界内,找下一个粒子
                             if (Exclusion_list[i].Contains(pos))
@@ -141,7 +142,7 @@ namespace JenniferFluid
                         if (!exclude)
                         {
                             Boundary_Positions.Add(pos);
-                            //calculate the range of real bound particles
+                            //calculate the range of real bound particles 一点点拓展，计算实际的bounds
                             if (pos.x < min_boundarybounds.x) min_boundarybounds.x = pos.x;
                             if (pos.y < min_boundarybounds.y) min_boundarybounds.y = pos.y;
                             if (pos.z < min_boundarybounds.z) min_boundarybounds.z = pos.z;
@@ -185,7 +186,7 @@ namespace JenniferFluid
             //particles into bounds.
 
             //diameter*0.9 被用做spacing
-            fluid_spacing = radius * 2.0f  * 0.9f;
+            fluid_spacing = radius * 2.0f  * fluid_space_coeff;
             float half_fluid_spacing = fluid_spacing * 0.5f;
             Fluid_Exclusion_list = new List<Bounds>();//null
             //how many particles in that directions
