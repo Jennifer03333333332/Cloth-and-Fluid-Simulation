@@ -1,4 +1,4 @@
-Shader "First_PBD/Particles_surface"
+Shader "First_PBD/Boundary_Particles"
 {
     Properties
     {
