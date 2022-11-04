@@ -110,7 +110,7 @@ namespace JenniferFluid
                 CreateArgBuffer(mesh.GetIndexCount(0));//2306
 
             material.SetBuffer("positions", Positions);
-            material.SetColor("color", Color.white);
+            material.SetColor("color", new Color(4.0f, 79.0f, 118.0f));//Color.white   //new Color(4.0f, 79.0f, 180.0f)
             material.SetFloat("diameter", ParticleDiameter);
 
             ShadowCastingMode castShadow = ShadowCastingMode.Off;

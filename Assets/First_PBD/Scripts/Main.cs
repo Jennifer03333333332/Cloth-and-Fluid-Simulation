@@ -172,8 +172,8 @@ namespace JenniferFluid
 
         private void CreateFluid()
         {
-            Vector3 min_fluidbounds = new Vector3(-8.0f + radius, 0.0f + radius, -1.0f + radius);
-            Vector3 max_fluidbounds = new Vector3(-4.0f - radius, 8.0f - radius, 2.0f - radius);//(-4, 8, 2); just give the initial fluid's volume
+            Vector3 min_fluidbounds = new Vector3(-4.0f + radius, 0.0f + radius, -1.0f + radius);//(-8,0,-1)
+            Vector3 max_fluidbounds = new Vector3(4.0f - radius, 8.0f - radius, 2.0f - radius);//(-4, 8, 2); just give the initial fluid's volume
 
             Bounds fluidbounds = new Bounds();
             fluidbounds.SetMinMax(min_fluidbounds, max_fluidbounds);
