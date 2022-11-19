@@ -737,7 +737,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 812e1575f824393428083e40566c0c3c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  radius: 0.07
+  radius: 0.058
   fluid_space_coeff: 0.9
   density: 1000
   m_drawFluidParticles: 1

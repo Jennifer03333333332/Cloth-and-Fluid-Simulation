@@ -49,6 +49,10 @@ float ViscLapKernel(float len2)
 }
 
 #define THREADS 128
+#define THREADX 16
+#define THREADY 8
+
+
 #define PI 3.14159265359
 
 RWStructuredBuffer<float4> Positions;

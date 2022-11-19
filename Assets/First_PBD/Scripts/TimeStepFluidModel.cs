@@ -8,7 +8,7 @@ namespace JenniferFluid
 {
     public class TimeStepFluidModel: IDisposable
     {
-        private const int THREADS = 128;
+        private const int THREADS = 128;//try 256 //128
         private const int READ = 0;
         private const int WRITE = 1;
         //test
