@@ -737,12 +737,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 812e1575f824393428083e40566c0c3c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  radius: 0.058
+  radius: 0.06
   fluid_space_coeff: 0.9
   density: 1000
   m_drawFluidParticles: 1
   m_drawBoundaryParticles: 0
-  m_startRunning: 0
+  m_startRunning: 1
   volume_mat: {fileID: 2100000, guid: 08efed2497ae8e44d9a57656d2d47aff, type: 2}
   m_particleMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
   m_fluidParticleMat: {fileID: 2100000, guid: d15869a62b149464b8980f55b89177a8, type: 2}

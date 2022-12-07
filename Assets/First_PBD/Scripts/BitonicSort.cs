@@ -26,7 +26,7 @@ namespace JenniferFluid
         //1024 * 1024 = 1048576
 
         //Num threads for the copy and fill kernels.
-        private const int THREADS = 128;
+        private const int THREADS = Singleton.Threads;
 
         // The number of elements to sort is limited to an even power of 2.
         // the min/max range of particles for these sizes are shown above.
@@ -35,8 +35,9 @@ namespace JenniferFluid
         private const int BITONIC_BLOCK_SIZE = 512;
         private const int TRANSPOSE_BLOCK_SIZE = 16;
 
-        public const int MAX_ELEMENTS = BITONIC_BLOCK_SIZE * BITONIC_BLOCK_SIZE;
-        public const int MIN_ELEMENTS = BITONIC_BLOCK_SIZE * TRANSPOSE_BLOCK_SIZE;
+
+        public const int MAX_ELEMENTS = BITONIC_BLOCK_SIZE * BITONIC_BLOCK_SIZE;//512*512 = 262144
+        public const int MIN_ELEMENTS = BITONIC_BLOCK_SIZE * TRANSPOSE_BLOCK_SIZE;//512*16 = 8192
 
         private const int MATRIX_WIDTH = BITONIC_BLOCK_SIZE;
 
@@ -83,7 +84,7 @@ namespace JenniferFluid
             m_shader.SetBuffer(m_fillKernel, "Input", input);
             m_shader.SetBuffer(m_fillKernel, "Data", m_buffer1);
             m_shader.Dispatch(m_fillKernel, NumElements / THREADS, 1, 1);
-
+            Debug.Log(NumElements  + " BitonicSort NumElements");
             int MATRIX_HEIGHT = NumElements / BITONIC_BLOCK_SIZE;
 
             m_shader.SetInt("Width", MATRIX_HEIGHT);
@@ -97,10 +98,12 @@ namespace JenniferFluid
                 // Sort the row data
                 m_shader.SetInt("Level", level);
                 m_shader.SetInt("LevelMask", level);
+                m_shader.SetInt("dispatchgroupdimX", NumElements / BITONIC_BLOCK_SIZE);//test
                 m_shader.Dispatch(m_bitonicKernel, NumElements / BITONIC_BLOCK_SIZE, 1, 1);
+                //Debug.Log(NumElements / BITONIC_BLOCK_SIZE + "bitonic1");
             }
 
-            // Then sort the rows and columns for the levels > than the block size
+            // Then sort the rows and columns for the levels > than the block size 
             // Transpose. Sort the Columns. Transpose. Sort the Rows.
             for (int level = (BITONIC_BLOCK_SIZE * 2); level <= NumElements; level = level * 2)
             {
@@ -115,8 +118,9 @@ namespace JenniferFluid
 
                 // Sort the transposed column data
                 m_shader.SetBuffer(m_bitonicKernel, "Data", m_buffer2);
+                m_shader.SetInt("dispatchgroupdimX", NumElements / BITONIC_BLOCK_SIZE);//test
                 m_shader.Dispatch(m_bitonicKernel, NumElements / BITONIC_BLOCK_SIZE, 1, 1);
-
+                //Debug.Log(NumElements / BITONIC_BLOCK_SIZE + "bitonic2");
                 // Transpose the data from buffer 2 back into buffer 1
                 m_shader.SetInt("Level", BITONIC_BLOCK_SIZE);
                 m_shader.SetInt("LevelMask", level);
@@ -128,7 +132,9 @@ namespace JenniferFluid
 
                 // Sort the row data
                 m_shader.SetBuffer(m_bitonicKernel, "Data", m_buffer1);
+                m_shader.SetInt("dispatchgroupdimX", NumElements / BITONIC_BLOCK_SIZE);//test
                 m_shader.Dispatch(m_bitonicKernel, NumElements / BITONIC_BLOCK_SIZE, 1, 1);
+                //Debug.Log(NumElements / BITONIC_BLOCK_SIZE + "bitonic3");
             }
 
             m_shader.SetInt("Width", count);
@@ -145,15 +151,10 @@ namespace JenniferFluid
             if (count > MAX_ELEMENTS)
                 throw new ArgumentException("Data > MAX_ELEMENTS. Need to increase Bitonic size");
 
-            int NumElements;
-
-            int level = TRANSPOSE_BLOCK_SIZE;
-            do
-            {
-                NumElements = BITONIC_BLOCK_SIZE * level;
-                level *= 2;
+            int NumElements = BITONIC_BLOCK_SIZE * TRANSPOSE_BLOCK_SIZE;
+            while (NumElements < count){
+                NumElements *= 2;
             }
-            while (NumElements < count);
 
             return NumElements;
         }

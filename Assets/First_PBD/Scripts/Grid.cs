@@ -9,7 +9,7 @@ namespace JenniferFluid
     public class Grid : IDisposable
     {
         
-        private const int THREADS = 128;
+        private const int THREADS = Singleton.Threads;
         private const int READ = 0;
         private const int WRITE = 1;
 
@@ -42,7 +42,8 @@ namespace JenniferFluid
 
         private int m_hashKernel, m_clearKernel, m_mapKernel;
 
-        //boundary's particles
+        //1st:boundary's particles
+        //2nd: TimeStepFluidModel(),boundary + fluid
         public Grid(Bounds bounds, int numParticles, float cellSize)
         {
             Unity.Collections.LowLevel.Unsafe.UnsafeUtility.SetLeakDetectionMode(NativeLeakDetectionMode.EnabledWithStackTrace);
@@ -52,7 +53,7 @@ namespace JenniferFluid
 
             Groups = TotalParticles / THREADS;
             if (TotalParticles % THREADS != 0) Groups++;
-
+            Debug.Log(Groups + " Grid threadgroup");
             Vector3 min, max;
             min = bounds.min;
 

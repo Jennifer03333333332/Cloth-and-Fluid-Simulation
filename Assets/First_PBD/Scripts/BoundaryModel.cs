@@ -9,7 +9,7 @@ namespace JenniferFluid
 {
     public class BoundaryModel : IDisposable
     {
-        private const int THREADS = 128;
+        private const int THREADS = Singleton.Threads;
         public int NumParticles { get; private set; }
 
         public Bounds Bounds;
@@ -71,7 +71,7 @@ namespace JenniferFluid
 
             int groups = NumParticles / THREADS;
             if (NumParticles % THREADS != 0) groups++;
-
+            Debug.Log(groups + " BoundaryModel threadgroup");
             //Fills the boundarys psi array so the fluid can
             //collide against it smoothly. The original computes
             //the phi for each boundary particle based on the

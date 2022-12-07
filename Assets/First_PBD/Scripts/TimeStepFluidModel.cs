@@ -8,13 +8,20 @@ namespace JenniferFluid
 {
     public class TimeStepFluidModel: IDisposable
     {
-        private const int THREADS = 128;//try 256 //128
+        private const int THREADS = Singleton.Threads;//try 256 //128
+        //private const int THREADX = 128;
+        //private const int THREADY = 1;
+
+
+
         private const int READ = 0;
         private const int WRITE = 1;
         //test
         bool capturing = true;
         //ThreadsGroups
         public int ThreadsGroups { get; private set; }
+        public int ThreadsGroupX { get; private set; }
+        public int ThreadsGroupY { get; private set; }
 
         public int SolverIterations { get; set; }
 
@@ -44,6 +51,16 @@ namespace JenniferFluid
             ThreadsGroups = numParticles / THREADS;//112
             if (numParticles % THREADS != 0) ThreadsGroups++;
 
+
+            ThreadsGroupX = (int)Mathf.Pow(ThreadsGroups, 0.5f);
+            ThreadsGroupY = ThreadsGroups / ThreadsGroupX + 1;
+
+            ThreadsGroupX = ThreadsGroups;
+            ThreadsGroupY = 1;
+            //Debug.Log(ThreadsGroupX);
+            //Debug.Log(ThreadsGroupY);
+
+
             m_shader = Resources.Load("Simulation") as ComputeShader;
         }
 
@@ -61,6 +78,8 @@ namespace JenniferFluid
             //Set the Simulation.compute
             //About the FluidModel
             m_shader.SetInt("NumParticles", m_fluid.NumParticles);
+            //m_shader.SetInt("THREADX", THREADX);
+            //m_shader.SetInt("THREADY", THREADY);
             m_shader.SetVector("Gravity", new Vector3(0.0f, -9.81f, 0.0f));
             m_shader.SetFloat("Dampning", m_fluid.Dampning);
             m_shader.SetFloat("DeltaTime", dt);
@@ -114,7 +133,7 @@ namespace JenniferFluid
             m_shader.SetBuffer(kernel, "VelocitiesREAD", m_fluid.Velocities[READ]);
             m_shader.SetBuffer(kernel, "VelocitiesWRITE", m_fluid.Velocities[WRITE]);
 
-            m_shader.Dispatch(kernel, ThreadsGroups, 1, 1);
+            m_shader.Dispatch(kernel, ThreadsGroupX, ThreadsGroupY, 1);
             //void PredictPositions(int id : SV_DispatchThreadID)
 
             //dt is each iteration time; Damping now = 0
@@ -162,11 +181,11 @@ namespace JenniferFluid
             for (int i = 0; i < ConstraintIterations; i++)
             {
                 m_shader.SetBuffer(computeKernel, "PredictedREAD", m_fluid.Predicted[READ]);
-                m_shader.Dispatch(computeKernel, ThreadsGroups, 1, 1);
+                m_shader.Dispatch(computeKernel, ThreadsGroupX, ThreadsGroupY, 1);
 
                 m_shader.SetBuffer(solveKernel, "PredictedREAD", m_fluid.Predicted[READ]);
                 m_shader.SetBuffer(solveKernel, "PredictedWRITE", m_fluid.Predicted[WRITE]);
-                m_shader.Dispatch(solveKernel, ThreadsGroups, 1, 1);
+                m_shader.Dispatch(solveKernel, ThreadsGroupX, ThreadsGroupY, 1);
 
                 Swap(m_fluid.Predicted);
             }
@@ -190,7 +209,7 @@ namespace JenniferFluid
             m_shader.SetBuffer(kernel, "PredictedREAD", m_fluid.Predicted[READ]);
             m_shader.SetBuffer(kernel, "VelocitiesWRITE", m_fluid.Velocities[WRITE]);
 
-            m_shader.Dispatch(kernel, ThreadsGroups, 1, 1);
+            m_shader.Dispatch(kernel, ThreadsGroupX, ThreadsGroupY, 1);
 
             Swap(m_fluid.Velocities);
         }
@@ -213,7 +232,7 @@ namespace JenniferFluid
             m_shader.SetBuffer(kernel, "VelocitiesREAD", m_fluid.Velocities[READ]);
             m_shader.SetBuffer(kernel, "VelocitiesWRITE", m_fluid.Velocities[WRITE]);
 
-            m_shader.Dispatch(kernel, ThreadsGroups, 1, 1);
+            m_shader.Dispatch(kernel, ThreadsGroupX, ThreadsGroupY, 1);
 
             Swap(m_fluid.Velocities);
         }
@@ -228,7 +247,7 @@ namespace JenniferFluid
             m_shader.SetBuffer(kernel, "Positions", m_fluid.Positions);
             m_shader.SetBuffer(kernel, "PredictedREAD", m_fluid.Predicted[READ]);
 
-            m_shader.Dispatch(kernel, ThreadsGroups, 1, 1);
+            m_shader.Dispatch(kernel, ThreadsGroupX, ThreadsGroupY, 1);
         }
 
     }

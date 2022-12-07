@@ -49,9 +49,10 @@ float ViscLapKernel(float len2)
 }
 
 #define THREADS 128
-#define THREADX 16
-#define THREADY 8
-
+#define THREADX 128
+#define THREADY 1
+//int THREADX;
+//int THREADY;
 
 #define PI 3.14159265359
 
@@ -90,7 +91,7 @@ float3 PredictedPosition(int i, float3 velocity)
 
 #pragma kernel PredictPositions
 
-[numthreads(THREADS, 1, 1)]
+[numthreads(THREADX, THREADY, 1)]
 void PredictPositions(int id : SV_DispatchThreadID)
 {
 	if (id < NumParticles)
@@ -221,7 +222,7 @@ void ComputeDensityAndPressure(int id, float3 pi, out float density, out float p
 
 #pragma kernel ComputeDensity
 
-[numthreads(THREADS, 1, 1)]
+[numthreads(THREADX, THREADY, 1)]
 void ComputeDensity(int id : SV_DispatchThreadID)
 {
 	if (id < NumParticles)
@@ -304,7 +305,7 @@ float3 SolveDensity(int id, float3 pi, float pressure)
 
 #pragma kernel SolveConstraint
 
-[numthreads(THREADS, 1, 1)]
+[numthreads(THREADX, THREADY, 1)]
 void SolveConstraint(int id : SV_DispatchThreadID)
 {
 	if (id < NumParticles)
@@ -320,7 +321,7 @@ void SolveConstraint(int id : SV_DispatchThreadID)
 
 #pragma kernel UpdateVelocities
 
-[numthreads(THREADS, 1, 1)]
+[numthreads(THREADX, THREADY, 1)]
 void UpdateVelocities(int id : SV_DispatchThreadID)
 {
 	if (id < NumParticles)
@@ -380,7 +381,7 @@ float3 ComputeViscosity(int id, float3 pi)
 
 #pragma kernel SolveViscosity
 
-[numthreads(THREADS, 1, 1)]
+[numthreads(THREADX, THREADY, 1)]
 void SolveViscosity(int id : SV_DispatchThreadID)
 {
 	if (id < NumParticles)
@@ -395,7 +396,7 @@ void SolveViscosity(int id : SV_DispatchThreadID)
 
 #pragma kernel UpdatePositions
 
-[numthreads(THREADS, 1, 1)]
+[numthreads(THREADX, THREADY, 1)]
 void UpdatePositions(int id : SV_DispatchThreadID)
 {
 	if (id < NumParticles)
