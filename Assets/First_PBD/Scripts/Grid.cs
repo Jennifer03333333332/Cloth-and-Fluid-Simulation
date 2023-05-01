@@ -69,8 +69,9 @@ namespace JenniferFluid
             int depth = (int)Bounds.size.z;
 
             int size = width * height * depth;
-
+            //IndexMap: size = totalparticles
             IndexMap = new ComputeBuffer(TotalParticles, 2 * sizeof(int));
+            //Table: size = volumn of bounds
             Table = new ComputeBuffer(size, 2 * sizeof(int));
 
             m_sort = new BitonicSort(TotalParticles);
